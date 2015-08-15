@@ -4,7 +4,7 @@ import re
 import sys
 
 trace_dir = '/sys/kernel/debug/tracing'
-event_dir = trace_dir + '/events/task/task_rename'
+event_dir = trace_dir + '/events/sched/sched_process_exec'
 
 
 def WriteFile(file, str):
@@ -35,12 +35,10 @@ def ReadCmdline(pid_str):
   return s
 
 def main(verbose):
-  file = event_dir + "/enable"
-  WriteFile(file, "1")
-  s = ReadFile(file)
-  print "write %s to file %s" % (s, file)
   WriteFile(trace_dir + '/tracing_on', '0')
   WriteFile(trace_dir + '/current_tracer', 'nop')
+  WriteFile(trace_dir + '/set_event', '')
+  WriteFile(event_dir + '/enable', "1")
   WriteFile(trace_dir + '/tracing_on', '1')
   f = open(trace_dir + '/trace_pipe', 'r')
   try:
@@ -48,7 +46,7 @@ def main(verbose):
       s = f.readline()
       if verbose:
         print s
-      m = re.search('pid=(\d+)', s)
+      m = re.search(' pid=(\d+)', s)
       if m:
         pid_str = m.group(1)
         cmdline = ReadCmdline(pid_str)
